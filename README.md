@@ -1,2 +1,4 @@
 # Groovy
 Groovy code snippets and thoughts I've collected while learning the Groovy Language
+
+I hit this [Vertx2](http://vertx.io/vertx2/docs.html) problem when trying to [send a message over the event bus from inside a worker verticle](Using-actor-inside-worker-verticle-Vert2) some time back. It turned out, while inside the worker verticle, that I could only fire a message to another verticel that comprised the vertx module. This seemed very strange to me but I suppose the body of the verticle essentially represents the response to a event message sent to the verticle and so probably makes some kind of sense (did I mention I'm not a vertx2 expert?). Anyway, to get over this bump as quickly as possible I decided to use [GPars Actor framework](http://www.gpars.org/webapp/guide/index.html#_user_guide_to_actors). I did look at [RX.Java](https://github.com/ReactiveX/RxJava) but for what I wanted to do it seemed overkill.

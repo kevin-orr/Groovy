@@ -1,3 +1,7 @@
+import javax.net.ssl.X509TrustManager
+import javax.security.cert.CertificateException
+import java.security.cert.X509Certificate
+
 /**
  * Created by kevin orr on 03/02/2017.
  *
@@ -53,5 +57,36 @@ class SSLChecker {
 
     }
 
+    /**
+     * Ordinarily you'd refrain from supplying your own TrustManager preferring
+     * instead to let the PKIX guy do all the heavy lifting required in path validation etc.
+     *
+     * But in our case we want to trap the call to checkServerTrusted() made during the
+     * SSL handshake, from inside ClientHandshaker.java
+     *
+     * We'll also attempt to delegate the actual validation to a trust manager so we can
+     * report on the validation, but essentially we want to capture the chain that's
+     * sent down for validation.
+     */
+    private static class TrustManagerLite implements X509TrustManager {
+        private final X509TrustManager tm
+        private X509Certificate[] chain
 
+        TrustManagerLite(X509TrustManager tm) {
+            this.tm = tm
+        }
+        /** do not care about this for our use case */
+        X509Certificate[] getAcceptedIssuers() {
+            throw new UnsupportedOperationException()
+        }
+        /** do not care about this for our use case */
+        void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            throw new UnsupportedOperationException()
+        }
+        /** we do care about this - get that chain and delegate the validation so we can report */
+        void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            this.chain = chain
+            tm.checkServerTrusted(chain, authType)
+        }
+    }
 }

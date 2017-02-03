@@ -27,4 +27,15 @@ class SSLCheckerSpec extends Specification {
         'endpoint'      | ['-endpoint', '']
         'endpoint'      | ['-endpoint', ' ']
     }
+
+    def "should get a cert chain or null when calling getCertChain"() {
+        setup:
+        def checker = new SSLChecker()
+
+        when:
+        checker.getCertChain()
+
+        then:
+        noExceptionThrown()
+    }
 }

@@ -1,10 +1,8 @@
 # Groovy
 
 ##### A small collection of various Groovy code snippets while learning the Groovy Language...
-[Join Tables in Grails](#JoinTable)
-
-[SSL and HTTPS](#HTTPS)
-
+[Join Tables in Grails](#JoinTable)  
+[SSL and HTTPS](#HTTPS)  
 [Vert-2](#Vertx)
 
 

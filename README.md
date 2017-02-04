@@ -19,7 +19,7 @@ that tricky to extend.
 <a name="HTTPS"/>
 ### SSL and HTTPS 
 
-I wanted a simple way to ping a server over HTTPS and see if the server could be trusted.
+I wanted a simple way to ping a server over [HTTPS](SSLChecker) and see if the server could be trusted.
 
 
 <a name="Vertx"/>

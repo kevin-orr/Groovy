@@ -33,7 +33,7 @@ class SSLCheckerSpec extends Specification {
         def checker = new SSLChecker()
 
         when:
-        checker.getCertChain()
+        checker.getCertChain('https://www.google.com')
 
         then:
         noExceptionThrown()

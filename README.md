@@ -2,7 +2,9 @@
 
 ##### A small collection of various Groovy code snippets while learning the Groovy Language...
 [Join Tables in Grails](#JoinTable)
+
 [SSL and HTTPS](#HTTPS)
+
 [Vert-2](#Vertx)
 
 
@@ -12,6 +14,7 @@
 Here's a way to [create a join table between two domains but with added state](has.many.join.table.name).
 Grails/Gorm doesn't naturally let you do this - convention over configuration or something - but it's not
 that tricky to extend.
+
 
 
 
@@ -30,6 +33,8 @@ Anyway, suffice it to say, there are lots of reasons why you might not trust a s
 So I thought it would edifying to write a small command line tool that could point at a server and it would pull down the
 certificate chain, do some reporting on, perhaps even look at different extensions within the certs chain to see if you
 the trust anchor is somewhere else. Anyway, more an an exercise in playing with SSL layer.
+
+
 
 
 

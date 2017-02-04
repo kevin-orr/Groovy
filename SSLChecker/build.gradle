@@ -1,11 +1,15 @@
 group 'com.korr'
 version '1.0-SNAPSHOT'
 
+apply plugin: 'application'
 apply plugin: 'groovy'
+
 
 repositories {
     mavenCentral()
 }
+
+mainClassName = "SSLChecker"
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.4.1'

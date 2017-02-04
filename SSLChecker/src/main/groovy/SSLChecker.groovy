@@ -5,17 +5,11 @@ import javax.net.ssl.*
 import javax.security.cert.CertificateException
 import java.security.InvalidAlgorithmParameterException
 import java.security.KeyStore
-import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
-import java.security.cert.CertPath
-import java.security.cert.CertPathValidator
-import java.security.cert.CertPathValidatorException
-import java.security.cert.CertPathValidatorResult
-import java.security.cert.Certificate
-import java.security.cert.CertificateFactory
-import java.security.cert.PKIXParameters
-import java.security.cert.TrustAnchor
-import java.security.cert.X509Certificate
+import java.security.cert.*
+
+import static java.lang.System.err as err
+import static java.lang.System.out as out
 
 /**
  * Created by kevin orr on 03/02/2017.
@@ -25,7 +19,7 @@ import java.security.cert.X509Certificate
  * First up this isn't about MSSL or mutual authentication were the client has to also authenticate to the server.
  * All I'm concerned about here is trying to verify a server certificate for some HTTPS endpoint.
  *
- *
+
  */
 class SSLChecker {
 
@@ -42,12 +36,12 @@ class SSLChecker {
         // now slurp up the command line arguments...
         cli.with {
             // required params
-            h longOpt: 'help', 'Show usage information', required: false
-            endpoint longOpt: 'endpoint', 'The url to test against', required: true, args: 1
+            h longOpt:         'help',      'Show usage information',       required: false
+            endpoint longOpt:  'endpoint',  'The url to test against',      required: true,  args: 1
             // optional params below
-            proxy longOpt: 'proxy', 'The HTTPS proxy', required: false, args: 1
-            proxyport longOpt: 'proxyport', 'The HTTPS proxy port', required: false, args: 1
-            debug longOpt: 'debug', 'turn on ssl:record:plaintext', required: false, args: 0
+            proxy longOpt:     'proxy',     'The HTTPS proxy',              required: false, args: 1
+            proxyport longOpt: 'proxyport', 'The HTTPS proxy port',         required: false, args: 1
+            debug longOpt:     'debug',     'turn on ssl:record:plaintext', required: false, args: 0
         }
 
         // next actually do the parsing of the command line arguments
@@ -55,11 +49,12 @@ class SSLChecker {
         assert opt, "Some or all required arguments are missing - can't do nothing without them dude!"
 
         if (opt?.h || !commandLineArgs) {
-            System.err << cli.usage()
+            err << cli.usage()
             assert commandLineArgs, 'Some or all required parameters missing'
         }
 
         final endpoint = opt?.endpoint?.trim()
+
         assert endpoint, "Endpoint can't be null"
 
         if (opt?.debug) System.setProperty('javax.net.debug', 'ssl:record:plaintext')
@@ -71,24 +66,25 @@ class SSLChecker {
         def checker = new SSLChecker()
 
         // I prefer how Python/Scala handle tuples - come on Groovy
-        def responseTuple = checker.getCertChain endpoint
+        def result = checker.getCertChain endpoint
 
         // any errors?
-        if (responseTuple.second) responseTuple?.second?.each { printIt it, System.err }
+        if (result.failed) result.errors.each { String msg -> printIt msg, err }
 
-        assert responseTuple.first, 'Failed to get certificate chain'
+        assert result.failed, 'Failed to get certificate chain'
 
         // looks like we got a chain
-        def chain = responseTuple?.first
+        def chain = result.chain
 
         Set<TrustAnchor> trustAnchor = new HashSet<>()
         trustAnchor.add(new TrustAnchor(chain.last(), null))
-        responseTuple = checker.isCertChainValid chain.init(), trustAnchor
+        result = checker.isCertChainValid chain.init(), trustAnchor
 
         // any errors?
-        if (responseTuple.second) responseTuple?.second?.each { printIt it, System.err }
+        if (result.failed) result.errors.each { String msg -> printIt msg, err }
 
-        printIt "Cert chain is ${responseTuple.first}"
+        printIt "Got${result.failed?'':' no'} errors."
+
 
     }
 
@@ -102,9 +98,9 @@ class SSLChecker {
      * which will basically point us to where the trust anchor is (the server may have sent down a chain of certs
      * but the last one may not have been the trust anchor needed to validate the chain)
      */
-    def getCertChain(endpoint, port = 443) {
+    def getCertChain(endpoint) {
         TrustManagerLite tm
-        def errors = []
+        def result = [failed: false, chain: [], errors: []]
         try {
             // sorry, there's a lot of setting up here but it's kinda like a Russian dolls...
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType())
@@ -137,12 +133,13 @@ class SSLChecker {
 
         } catch (Exception e) {
             // ok, so I reckon the SSL handshake has blown up - we've probably got a chain but validation failed.
-            errors << e.message
+            result.errors << e.message
+            result.failed = true
         }
         // get the X509Certificate chain
-        def chain = tm?.chain
+        result.chain = tm?.chain
 
-        new Tuple2<>(chain, errors)
+        result
     }
 
     /**
@@ -154,22 +151,25 @@ class SSLChecker {
      * @return true if the chain is PKIX ok, false otherwise
      */
     def isCertChainValid(def chain, def trustAnchorOrKeystore, boolean revocationEnabled = true) {
-        def errors = []
+
+        def result = [failed: false, errors: []]
 
         // next create CertPathValidator that implements the 'PKIX' algorithm...
         CertPathValidator cpv
+        CertPath cp
         try {
             // instantiate a CertificateFactory for X.509 and
             // extract the certification path from the List of Certificates
-            CertPath cp = CertificateFactory.getInstance('X.509')
-                                            .generateCertPath(chain as List<Certificate>)
+            cp = CertificateFactory.getInstance('X.509')
+                                   .generateCertPath(chain as List<Certificate>)
 
 
             cpv = CertPathValidator.getInstance('PKIX')
 
         } catch (Exception nsae) {
-            errors << nsae.message
-            return new Tuple2<>(false, errors)
+            result.errors << nsae.message
+            result.failed = true
+            return result
         }
         // next validate certification path ("cp") with specified parameters ("params")...
         try {
@@ -182,22 +182,24 @@ class SSLChecker {
             printIt cpvResult
 
         } catch (InvalidAlgorithmParameterException iape) {
-            errors << iape.message
-            return new Tuple2<>(false, errors)
+            result.errors << iape.message
+            result.failed = true
+            return result
 
         } catch (CertPathValidatorException cpve) {
-            errors << cpve.message
-            errors << "index of certificate that caused exception: ${cpve.getIndex()}"
-            return new Tuple2<>(false, errors)
+            result.errors << cpve.message
+            result.errors << "index of certificate that caused exception: ${cpve.getIndex()}"
+            result.failed = true
+            return result
         }
-        new Tuple2<>(true, errors)
+        result
 
     }
 
-    def printIt(what, destination = System.out) {
-        destination << '=' * 120 << '\n'
-        destination << what << '\n'
-        destination << '=' * 120 << '\n'
+    static def printIt(what, toDestinationStream = out) {
+        toDestinationStream << '=' * 120 << '\n'
+        toDestinationStream << what << '\n'
+        toDestinationStream << '=' * 120 << '\n'
     }
 
     /**

@@ -8,21 +8,23 @@
 
 
 <a name="JoinTable"/>
-### Join Tables in Grails
+### Join Tables in Grails  
+
 Here's a way to [create a join table between two domains but with added state](has.many.join.table.name).
 Grails/Gorm doesn't naturally let you do this - convention over configuration or something - but it's not
 that tricky to extend.
 
 
 
-
 <a name="HTTPS"/>
-### SSL and HTTPS
+### SSL and HTTPS 
+
 Chatting [HTTPS](SSLChecker) to a server can certainly throw up many issues and I'm not even talking about
 mutual authentication (2 way SSL or MSSL), where you, as the client talking to the server, have to authenticate
-to the server with your very own cert.
+to the server with your very own cert.  
 
 I wanted a simple way to ping a server over HTTPS and see if the server could be trusted.
+
 
 There's lots of reasons why you might not trust a server - the trust anchor for the server's cert may not be in your
 trust store, or perhaps the wrong certs are being pulled down because taffic is going via a proxy and it's not configured
@@ -34,10 +36,9 @@ the trust anchor is somewhere else. Anyway, more an an exercise in playing with 
 
 
 
-
-
 <a name="Vertx"/>
 ### Vertx-2
+
 I hit this [Vertx-2](http://vertx.io/vertx2/docs.html) problem when trying to [send a message over the event bus from
 inside a worker verticle](using.actor.inside.vertx2.worker.verticle) some time back.
 

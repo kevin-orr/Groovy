@@ -3,8 +3,18 @@ import com.sun.jersey.api.client.config.DefaultClientConfig
 
 import javax.net.ssl.*
 import javax.security.cert.CertificateException
+import java.security.InvalidAlgorithmParameterException
 import java.security.KeyStore
+import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
+import java.security.cert.CertPath
+import java.security.cert.CertPathValidator
+import java.security.cert.CertPathValidatorException
+import java.security.cert.CertPathValidatorResult
+import java.security.cert.Certificate
+import java.security.cert.CertificateFactory
+import java.security.cert.PKIXParameters
+import java.security.cert.TrustAnchor
 import java.security.cert.X509Certificate
 
 /**
@@ -60,9 +70,25 @@ class SSLChecker {
 
         def checker = new SSLChecker()
 
-        def chain = checker.getCertChain endpoint
+        // I prefer how Python/Scala handle tuples - come on Groovy
+        def responseTuple = checker.getCertChain endpoint
 
-        assert chain, 'Failed to get certificate chain'
+        // any errors?
+        if (responseTuple.second) responseTuple?.second?.each { printIt it, System.err }
+
+        assert responseTuple.first, 'Failed to get certificate chain'
+
+        // looks like we got a chain
+        def chain = responseTuple?.first
+
+        Set<TrustAnchor> trustAnchor = new HashSet<>()
+        trustAnchor.add(new TrustAnchor(chain.last(), null))
+        responseTuple = checker.isCertChainValid chain.init(), trustAnchor
+
+        // any errors?
+        if (responseTuple.second) responseTuple?.second?.each { printIt it, System.err }
+
+        printIt "Cert chain is ${responseTuple.first}"
 
     }
 
@@ -104,9 +130,8 @@ class SSLChecker {
             def client = Client.create(config)
             def webSvc = client.resource(endpoint)
             def response = webSvc.head()
-            System.out << '=' * 120 << '\n'
-            System.out << "Response ${response.status}:${response.clientResponseStatus}\n"
-            System.out << '=' * 120 << '\n'
+
+            printIt "Response ${response.status}:${response.clientResponseStatus}\n"
 
             // ok, if we got here then chain has passed PKIX path validation.
 
@@ -118,6 +143,61 @@ class SSLChecker {
         def chain = tm?.chain
 
         new Tuple2<>(chain, errors)
+    }
+
+    /**
+     * attempts to validate the certificate chain using PKIX
+     * @param chain the chain to validate - should include the trust anchor
+     * @param trustAnchorOrKeystore the trust anchor or a key store that holds a trust anchor, that we'll
+     * attempt to validate up to
+     * @param revocationEnabled if true then do not use the CRL distribution points for checking revocation
+     * @return true if the chain is PKIX ok, false otherwise
+     */
+    def isCertChainValid(def chain, def trustAnchorOrKeystore, boolean revocationEnabled = true) {
+        def errors = []
+
+        // next create CertPathValidator that implements the 'PKIX' algorithm...
+        CertPathValidator cpv
+        try {
+            // instantiate a CertificateFactory for X.509 and
+            // extract the certification path from the List of Certificates
+            CertPath cp = CertificateFactory.getInstance('X.509')
+                                            .generateCertPath(chain as List<Certificate>)
+
+
+            cpv = CertPathValidator.getInstance('PKIX')
+
+        } catch (Exception nsae) {
+            errors << nsae.message
+            return new Tuple2<>(false, errors)
+        }
+        // next validate certification path ("cp") with specified parameters ("params")...
+        try {
+            PKIXParameters params = new PKIXParameters(trustAnchorOrKeystore)
+            // have we been asked to turn off CRL checking?
+            params.revocationEnabled = revocationEnabled
+
+            CertPathValidatorResult cpvResult = cpv.validate(cp, params)
+
+            printIt cpvResult
+
+        } catch (InvalidAlgorithmParameterException iape) {
+            errors << iape.message
+            return new Tuple2<>(false, errors)
+
+        } catch (CertPathValidatorException cpve) {
+            errors << cpve.message
+            errors << "index of certificate that caused exception: ${cpve.getIndex()}"
+            return new Tuple2<>(false, errors)
+        }
+        new Tuple2<>(true, errors)
+
+    }
+
+    def printIt(what, destination = System.out) {
+        destination << '=' * 120 << '\n'
+        destination << what << '\n'
+        destination << '=' * 120 << '\n'
     }
 
     /**

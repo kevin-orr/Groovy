@@ -16,9 +16,22 @@ certificate chain, do some reporting on, perhaps even look at different extensio
 the trust anchor is somewhere else. Anyway, more an an exercise in playing with SSL layer.
 
 
-Once built unzip/untar the distribution and invoke either the shell script or batch file depending on your OS:
+Once built unzip/untar the distribution and invoke either the shell script or batch file depending on your OS.
+Running the tool without any args should bring up the help...
+
+```java
+
+        Welcome to the SSL Checker...
+
+        Aim it at an endpoint that uses HTTPS and it will give you some
+         info on the site blahdy blah blah
 
 
-
+ -debug,--debug                 turn on ssl:record:plaintext
+ -endpoint,--endpoint <arg>     The url to test against
+ -h,--help                      Show usage information
+ -proxy,--proxy <arg>           The HTTPS proxy
+ -proxyport,--proxyport <arg>   The HTTPS proxy port
+```
 
 

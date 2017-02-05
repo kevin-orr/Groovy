@@ -1,5 +1,8 @@
 import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.config.DefaultClientConfig
+import sun.security.x509.AccessDescription
+import sun.security.x509.URIName
+import sun.security.x509.X509CertImpl
 
 import javax.net.ssl.*
 import javax.security.cert.CertificateException
@@ -22,6 +25,8 @@ import static java.lang.System.out as out
 
  */
 class SSLChecker {
+
+    final static endl = '\n'
 
     static void main(String... commandLineArgs) {
 
@@ -66,25 +71,20 @@ class SSLChecker {
         def checker = new SSLChecker()
 
         // I prefer how Python/Scala handle tuples - come on Groovy
-        def result = checker.getCertChain endpoint
+        def chain = checker.getCertChain endpoint
 
-        // any errors?
-        if (result.failed) result.errors.each { String msg -> printIt msg, err }
-
-        assert result.failed, 'Failed to get certificate chain'
-
-        // looks like we got a chain
-        def chain = result.chain
+        assert chain, 'Failed to get certificate chain - cannot really do anything else but quit - sorry!'
 
         Set<TrustAnchor> trustAnchor = new HashSet<>()
         trustAnchor.add(new TrustAnchor(chain.last(), null))
-        result = checker.isCertChainValid chain.init(), trustAnchor
+        def valid = checker.isCertChainValid chain.init(), trustAnchor
 
-        // any errors?
-        if (result.failed) result.errors.each { String msg -> printIt msg, err }
+        // ok, so what do we know so far...
+        if (!valid) {
+            showIt "OK, so perhaps a trust anchor didn't come down in chain - cert extension may point us to a trust anchor location...lets see what cert details tells us"
+        }
 
-        printIt "Got${result.failed?'':' no'} errors."
-
+        chainInfo chain
 
     }
 
@@ -100,7 +100,6 @@ class SSLChecker {
      */
     def getCertChain(endpoint) {
         TrustManagerLite tm
-        def result = [failed: false, chain: [], errors: []]
         try {
             // sorry, there's a lot of setting up here but it's kinda like a Russian dolls...
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType())
@@ -111,7 +110,7 @@ class SSLChecker {
 
             tmf.init(ks)
             // we're going to use this guy to attempt the real PKIX stuff and capture any errors that plop out
-            X509TrustManager defaultTrustManager = tmf.getTrustManagers().first()
+            X509TrustManager defaultTrustManager = tmf.trustManagers.first()
 
             // remember this guy from down below? She's gonna capture the chain of certs, hopefully...
             tm = new TrustManagerLite(defaultTrustManager)
@@ -127,19 +126,16 @@ class SSLChecker {
             def webSvc = client.resource(endpoint)
             def response = webSvc.head()
 
-            printIt "Response ${response.status}:${response.clientResponseStatus}\n"
+            showIt "Response ${response.status}:${response.clientResponseStatus}\n"
 
             // ok, if we got here then chain has passed PKIX path validation.
 
         } catch (Exception e) {
             // ok, so I reckon the SSL handshake has blown up - we've probably got a chain but validation failed.
-            result.errors << e.message
-            result.failed = true
+            showIt e.message
         }
         // get the X509Certificate chain
-        result.chain = tm?.chain
-
-        result
+        tm?.chain
     }
 
     /**
@@ -151,8 +147,6 @@ class SSLChecker {
      * @return true if the chain is PKIX ok, false otherwise
      */
     def isCertChainValid(def chain, def trustAnchorOrKeystore, boolean revocationEnabled = true) {
-
-        def result = [failed: false, errors: []]
 
         // next create CertPathValidator that implements the 'PKIX' algorithm...
         CertPathValidator cpv
@@ -167,9 +161,8 @@ class SSLChecker {
             cpv = CertPathValidator.getInstance('PKIX')
 
         } catch (Exception nsae) {
-            result.errors << nsae.message
-            result.failed = true
-            return result
+            showIt nsae.message
+            return false
         }
         // next validate certification path ("cp") with specified parameters ("params")...
         try {
@@ -179,28 +172,56 @@ class SSLChecker {
 
             CertPathValidatorResult cpvResult = cpv.validate(cp, params)
 
-            printIt cpvResult
+            // ok, looks good
 
         } catch (InvalidAlgorithmParameterException iape) {
-            result.errors << iape.message
-            result.failed = true
-            return result
+            showIt iape.message
+            return false
 
         } catch (CertPathValidatorException cpve) {
-            result.errors << cpve.message
-            result.errors << "index of certificate that caused exception: ${cpve.getIndex()}"
-            result.failed = true
-            return result
+            showIt cpve.message
+            showIt "index of certificate that caused exception: ${cpve.getIndex()}"
+            return false
         }
-        result
-
+        true
     }
 
-    static def printIt(what, toDestinationStream = out) {
-        toDestinationStream << '=' * 120 << '\n'
-        toDestinationStream << what << '\n'
-        toDestinationStream << '=' * 120 << '\n'
+    static def chainInfo(final chain) {
+        withDecoration { outputStream ->
+            chain.each { X509CertImpl cert ->
+                outputStream << "Here's some certificate info..." << endl << endl
+                outputStream << "subject:       ${cert.subjectDN}" << endl
+                outputStream << "issuer:        ${cert.issuerDN}" << endl
+                outputStream << "Serial Number: ${cert.serialNumber.toString(16)}" << endl
+
+                def cas = cert.authorityInfoAccessExtension
+                              .accessDescriptions
+                              .grep { description ->
+                                  description.accessMethod.equals(AccessDescription.Ad_CAISSUERS_Id)
+                              }
+
+                outputStream << "Found ${cas.size} Authority Info Access Extension(s)...so we have another location for trust anchor @" << endl
+
+                cas.each { AccessDescription description ->
+                    URIName uri = (URIName) description.accessLocation.name
+                    outputStream << uri.URI << endl
+                }
+                outputStream << endl * 2
+            }
+        }
     }
+
+    static def showIt(message) {
+        withDecoration(out, ''){ outputStream ->
+            outputStream << "$message$endl"
+        }
+    }
+    static def withDecoration(final toDestinationStream = err, final deco = '-', final Closure what) {
+        toDestinationStream << deco * 120 << endl
+        what(toDestinationStream)
+        toDestinationStream << deco * 120 << endl
+    }
+
 
     /**
      * Ordinarily you'd refrain from supplying your own TrustManager preferring

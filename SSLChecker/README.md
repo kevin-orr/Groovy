@@ -17,13 +17,14 @@ the trust anchor is somewhere else. Anyway, more an an exercise in playing with 
 
 
 Once built unzip/untar the distribution and invoke either the shell script or batch file depending on your OS.
+
 Running the tool without any args should bring up the help...
 
 ```java
 
         Welcome to the SSL Checker...
 
-        Aim it at an endpoint that uses HTTPS and it will give you some
+        Aim it at an host that uses HTTPS and it will give you some
          info on the site blahdy blah blah
 
 
@@ -32,6 +33,75 @@ Running the tool without any args should bring up the help...
  -h,--help                      Show usage information
  -proxy,--proxy <arg>           The HTTPS proxy
  -proxyport,--proxyport <arg>   The HTTPS proxy port
+```
+
+As an example, suppose we want to check out the site https://www.lightbend.com, just call the tool like this:
+```java
+SSLChecker -host lightbend.com
+```
+and you should get something like this (at time of writing anyways):
+
+```java
+
+Attempting to pull down certificate chain from https://www.lightbend.com
+
+
+Looks like we have an issue with the SSLHandshake - perhaps we can't build path:javax.net.ssl.SSLException:
+java.lang.RuntimeException: Unexpected error: java.security.InvalidAlgorithmParameterException: the trustAnchors
+arameter must be non-empty
+
+------------------------------------------------------------------------------------------------------------------------
+Here's certificate info for chain[0]...
+
+subject:       CN=www.lightbend.com, OU=PositiveSSL Multi-Domain, OU=Domain Control Validated
+issuer:        CN=COMODO RSA Domain Validation Secure Server CA, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB
+Serial Number: f97c1f351acc80e4160046e974ae824a
+Found 1 Authority Info Access Extension...
+URIName: http://crt.comodoca.com/COMODORSADomainValidationSecureServerCA.crt
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	Here's some info on certificate pointed at in AIA extension...
+	subject:       CN=COMODO RSA Domain Validation Secure Server CA, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB
+	issuer:        CN=COMODO RSA Certification Authority, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB
+	Serial Number: 2b2e6eead975366c148a6edba37c8c07
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Here's certificate info for chain[1]...
+
+subject:       CN=COMODO RSA Domain Validation Secure Server CA, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB
+issuer:        CN=COMODO RSA Certification Authority, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB
+Serial Number: 2b2e6eead975366c148a6edba37c8c07
+Found 1 Authority Info Access Extension...
+URIName: http://crt.comodoca.com/COMODORSAAddTrustCA.crt
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	Here's some info on certificate pointed at in AIA extension...
+	subject:       CN=COMODO RSA Certification Authority, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB
+	issuer:        CN=AddTrust External CA Root, OU=AddTrust External TTP Network, O=AddTrust AB, C=SE
+	Serial Number: 2766ee56eb49f38eabd770a2fc84de22
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Here's certificate info for chain[2]...
+
+subject:       CN=COMODO RSA Certification Authority, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB
+issuer:        CN=AddTrust External CA Root, OU=AddTrust External TTP Network, O=AddTrust AB, C=SE
+Serial Number: 2766ee56eb49f38eabd770a2fc84de22
+Found 0 Authority Info Access Extension...
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+Next attempting to validate the chain separately...
+
+
+Got a problem: Could not determine revocation status and the index of certificate that caused exception: 1
+
+
+Failed! OK, so looks like the trust anchor didn't come down in chain from server. Lets see more info from cert chain - perhaps
+there's an OCSP service inside Authority Info Access Extension...turn on the -ocsp flag to check against OCSP
+
+
+Finished! Bye bye!
 ```
 
 

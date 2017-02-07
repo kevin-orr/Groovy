@@ -214,3 +214,8 @@ Finished! Bye bye!
 
 '''
 
+# Still to do...
+* save the chain to disk
+* save the certs from inside AIA extension to disk
+* maybe have an option to save certs to keystore/truststore
+* go nuts and make a UI for it

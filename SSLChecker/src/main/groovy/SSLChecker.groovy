@@ -1,7 +1,8 @@
 import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.config.DefaultClientConfig
+import sun.security.provider.certpath.OCSP
+import sun.security.provider.certpath.URICertStore
 import sun.security.x509.AccessDescription
-import sun.security.x509.URIName
 import sun.security.x509.X509CertImpl
 
 import javax.net.ssl.*
@@ -33,17 +34,22 @@ class SSLChecker {
         def usageBanner = """
         Welcome to the SSL Checker...
         
-        Aim it at an endpoint that uses HTTPS and it will give you some info on the site blahdy blah blah
+        Aim it at an host that uses HTTPS and it will give you some info
+        on the site blahdy blah blah
         
-        """
+        """.stripIndent()
+
         def cli = new CliBuilder(usage: usageBanner)
 
         // now slurp up the command line arguments...
         cli.with {
-            // required params
+            // these are required params
             h longOpt:         'help',      'Show usage information',       required: false
-            endpoint longOpt:  'endpoint',  'The url to test against',      required: true,  args: 1
-            // optional params below
+            host longOpt:      'host',     'The host name test against',   required: true,  args: 1
+            // while theres are optional params below
+            ocsp  longOpt:     'ocsp',      'Use OCSP to validate',         required: false, args: 0
+            savechain longOpt: 'savechain', 'Save chain to disk',           required: false, args: 1
+            saveaia longOpt:   'saveaia',   'Save the AIA certs to disk',   required: false, args: 1
             proxy longOpt:     'proxy',     'The HTTPS proxy',              required: false, args: 1
             proxyport longOpt: 'proxyport', 'The HTTPS proxy port',         required: false, args: 1
             debug longOpt:     'debug',     'turn on ssl:record:plaintext', required: false, args: 0
@@ -51,16 +57,14 @@ class SSLChecker {
 
         // next actually do the parsing of the command line arguments
         OptionAccessor opt = cli.parse(commandLineArgs)
-        assert opt, "Some or all required arguments are missing - can't do nothing without them dude!"
 
         if (opt?.h || !commandLineArgs) {
-            err << cli.usage()
-            assert commandLineArgs, 'Some or all required parameters missing'
+            System.exit(0)
         }
 
-        final endpoint = opt?.endpoint?.trim()
+        final hostname = opt?.host?.trim()
 
-        assert endpoint, "Endpoint can't be null"
+        assert hostname, "hostname can't be null"
 
         if (opt?.debug) System.setProperty('javax.net.debug', 'ssl:record:plaintext')
 
@@ -70,22 +74,79 @@ class SSLChecker {
 
         def checker = new SSLChecker()
 
+        showIt "Attempting to pull down certificate chain from https://www.${hostname}"
         // I prefer how Python/Scala handle tuples - come on Groovy
-        def chain = checker.getCertChain endpoint
+        def chain = checker.getCertChain(hostname)
 
         assert chain, 'Failed to get certificate chain - cannot really do anything else but quit - sorry!'
 
+        // display some info on chain
+        checker.chainInfo(chain)
+
+        showIt "Next attempting to validate the chain separately..."
         Set<TrustAnchor> trustAnchor = new HashSet<>()
         trustAnchor.add(new TrustAnchor(chain.last(), null))
-        def valid = checker.isCertChainValid chain.init(), trustAnchor
+        def valid = checker.isCertChainValid(chain.init(), trustAnchor)
 
         // ok, so what do we know so far...
         if (!valid) {
-            showIt "OK, so perhaps a trust anchor didn't come down in chain - cert extension may point us to a trust anchor location...lets see what cert details tells us"
+            showIt "Failed! OK, so looks like the trust anchor didn't come down in chain from server. " +
+                    "Lets see more info from cert chain - perhaps there's an OCSP service inside Authority " +
+                    "Info Access Extension...turn on the -ocsp flag to check against OCSP",
+                    err
+        } else {
+            showIt "Success! It looks like we can trust host $hostname - but don't take my word for it..."
         }
 
-        chainInfo chain
+        // have we got an OCSP service url?
+        if (opt?.ocsp) {
+            showIt 'Ok, so looking for OCSP urls in chain extensions...'
 
+            checker.checkOCSP(chain)
+        }
+
+        showIt 'Finished! Bye bye!'
+    }
+
+    /**
+     * Looks at the AIA extension in each of the certs in chain and tries to validate them against any OCSP provider
+     * that appears in the cert extension
+     * @param chain the chain of certificates from the server
+     * @return nowt but good wishes
+     */
+    public checkOCSP(X509Certificate[] chain) {
+        def ocsp = chain.collect { OCSP.getResponderURI(it as X509Certificate) }
+        if (ocsp) {
+
+            showIt "Found OCSP service url:${ocsp.first()} - trying each cert in chain against OCSP provider..."
+
+            OCSP.RevocationStatus response
+            chain.eachWithIndex { x509, index ->
+                showIt "Trying certificate chain[$index] with serial number: ${x509.serialNumber.toString(16)}"
+
+                def certFromExtension = getCertFromAIAExtension(x509)
+
+                try {
+                    if (certFromExtension) {
+                        showIt "Contacting OCSP service using chain[$index] and cert in AIA extension as parameters..."
+
+                        response = OCSP.check(x509, certFromExtension as X509Certificate)
+
+                        if (response?.certStatus == OCSP.RevocationStatus.CertStatus.GOOD) showIt('Service says this cert is GOOD!')
+                        else showIt("Service says this cert is ${response.certStatus}")
+
+                    } else {
+                        showIt "No AIA extension for chain[$index]"
+                    }
+
+                } catch (Exception hmmm) {
+                    showIt "Ok, chain[$index] seems to be screwed:${hmmm}", err
+                }
+
+            }
+        } else {
+            showIt 'No OCSP urls found - sorry!', err
+        }
     }
 
     /**
@@ -98,7 +159,7 @@ class SSLChecker {
      * which will basically point us to where the trust anchor is (the server may have sent down a chain of certs
      * but the last one may not have been the trust anchor needed to validate the chain)
      */
-    def getCertChain(endpoint) {
+    def getCertChain(hostname) {
         TrustManagerLite tm
         try {
             // sorry, there's a lot of setting up here but it's kinda like a Russian dolls...
@@ -123,7 +184,7 @@ class SSLChecker {
             // lets use jersey for making calls out to endpoint
             def config = new DefaultClientConfig()
             def client = Client.create(config)
-            def webSvc = client.resource(endpoint)
+            def webSvc = client.resource("https://www.$hostname")
             def response = webSvc.head()
 
             showIt "Response ${response.status}:${response.clientResponseStatus}\n"
@@ -132,7 +193,7 @@ class SSLChecker {
 
         } catch (Exception e) {
             // ok, so I reckon the SSL handshake has blown up - we've probably got a chain but validation failed.
-            showIt e.message
+            showIt "Looks like we have an issue with the SSLHandshake - perhaps we can't build path:${e.message}", err
         }
         // get the X509Certificate chain
         tm?.chain
@@ -179,17 +240,34 @@ class SSLChecker {
             return false
 
         } catch (CertPathValidatorException cpve) {
-            showIt cpve.message
-            showIt "index of certificate that caused exception: ${cpve.getIndex()}"
+            showIt "Got a problem: ${cpve.message} and the index of certificate that caused exception: ${cpve.getIndex()}", err
             return false
         }
         true
     }
 
-    static def chainInfo(final chain) {
-        withDecoration { outputStream ->
-            chain.each { X509CertImpl cert ->
-                outputStream << "Here's some certificate info..." << endl << endl
+    /**
+     * pulls out the cert pointed at by the AIA extension - if the cert has one obviously!
+     * @param x509 the cert to work on
+     * @return the cert pointed to or null if there's no cert
+     */
+    def getCertFromAIAExtension(X509Certificate x509) {
+
+        def aia = (x509 as X509CertImpl).authorityInfoAccessExtension
+                                        .accessDescriptions
+                                        .grep { description ->
+                                            description.accessMethod.equals(AccessDescription.Ad_CAISSUERS_Id)
+                                        }
+
+        if (aia) URICertStore.getInstance(aia.first()).getCertificates(new X509CertSelector())?.first()
+        else null
+    }
+
+    /** displays some info on the cert chain */
+    def chainInfo(final chain, final stream = out) {
+        withDecoration(stream) { outputStream ->
+            chain.eachWithIndex { X509CertImpl cert, index->
+                outputStream << "Here's certificate info for chain[$index]..." << endl << endl
                 outputStream << "subject:       ${cert.subjectDN}" << endl
                 outputStream << "issuer:        ${cert.issuerDN}" << endl
                 outputStream << "Serial Number: ${cert.serialNumber.toString(16)}" << endl
@@ -200,19 +278,28 @@ class SSLChecker {
                                   description.accessMethod.equals(AccessDescription.Ad_CAISSUERS_Id)
                               }
 
-                outputStream << "Found ${cas.size} Authority Info Access Extension(s)...so we have another location for trust anchor @" << endl
+                outputStream << "Found ${cas.size} Authority Info Access Extension..." << endl
 
                 cas.each { AccessDescription description ->
-                    URIName uri = (URIName) description.accessLocation.name
-                    outputStream << uri.URI << endl
+                    outputStream << description.accessLocation.name << endl
+                    def x509 = getCertFromAIAExtension(cert as X509Certificate)
+//                    chainInfo([x509] as X509Certificate[], out)
+                    out << '+' * 120 << endl
+                    out << "\tHere's some info on certificate pointed at in AIA extension..." << endl
+                    out << "\tsubject:       ${x509.subjectDN}" << endl
+                    out << "\tissuer:        ${x509.issuerDN}" << endl
+                    out << "\tSerial Number: ${x509.serialNumber.toString(16)}" << endl
+                    out << '+' * 120 << endl
+
                 }
                 outputStream << endl * 2
             }
         }
     }
 
-    static def showIt(message) {
-        withDecoration(out, ''){ outputStream ->
+    /** some helper dudes... */
+    static def showIt(message, stream = out) {
+        withDecoration(stream, ''){ outputStream ->
             outputStream << "$message$endl"
         }
     }

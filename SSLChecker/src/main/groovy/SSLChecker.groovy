@@ -75,10 +75,12 @@ class SSLChecker {
         def checker = new SSLChecker()
 
         showIt "Attempting to pull down certificate chain from https://www.${hostname}"
-        // I prefer how Python/Scala handle tuples - come on Groovy
+
         def chain = checker.getCertChain(hostname)
 
         assert chain, 'Failed to get certificate chain - cannot really do anything else but quit - sorry!'
+
+        showIt "We've got a chain of ${chain.length} certificates...here's more details on the chain:"
 
         // display some info on chain
         checker.chainInfo(chain)
@@ -91,11 +93,11 @@ class SSLChecker {
         // ok, so what do we know so far...
         if (!valid) {
             showIt "Failed! OK, so looks like the trust anchor didn't come down in chain from server. " +
-                    "Lets see more info from cert chain - perhaps there's an OCSP service inside Authority " +
-                    "Info Access Extension...turn on the -ocsp flag to check against OCSP",
+                    "Lets see there's an OCSP service inside Authority " +
+                    "Info Access Extension in the certs...turn on the -ocsp flag to check against OCSP",
                     err
         } else {
-            showIt "Success! It looks like we can trust host $hostname - but don't take my word for it..."
+            showIt "Successfully validated server! It looks like we can trust host $hostname - but don't take my word for it..."
         }
 
         // have we got an OCSP service url?
@@ -253,9 +255,7 @@ class SSLChecker {
      */
     def getCertFromAIAExtension(X509Certificate x509) {
 
-        def aia = (x509 as X509CertImpl).authorityInfoAccessExtension
-                                        .accessDescriptions
-                                        .grep { description ->
+        def aia = (x509 as X509CertImpl)?.authorityInfoAccessExtension?.accessDescriptions?.grep { description ->
                                             description.accessMethod.equals(AccessDescription.Ad_CAISSUERS_Id)
                                         }
 
@@ -272,15 +272,13 @@ class SSLChecker {
                 outputStream << "issuer:        ${cert.issuerDN}" << endl
                 outputStream << "Serial Number: ${cert.serialNumber.toString(16)}" << endl
 
-                def cas = cert.authorityInfoAccessExtension
-                              .accessDescriptions
-                              .grep { description ->
+                def cas = cert?.authorityInfoAccessExtension?.accessDescriptions?.grep { description ->
                                   description.accessMethod.equals(AccessDescription.Ad_CAISSUERS_Id)
                               }
 
-                outputStream << "Found ${cas.size} Authority Info Access Extension..." << endl
+                outputStream << "Found ${cas?.size} Authority Info Access Extension..." << endl
 
-                cas.each { AccessDescription description ->
+                cas?.each { AccessDescription description ->
                     outputStream << description.accessLocation.name << endl
                     def x509 = getCertFromAIAExtension(cert as X509Certificate)
 //                    chainInfo([x509] as X509Certificate[], out)

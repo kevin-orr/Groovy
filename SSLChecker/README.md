@@ -215,6 +215,7 @@ Finished! Bye bye!
 '''
 
 # Still to do...
+* Host name verification - maybe show it in more detail blahdy blah blah
 * save the chain to disk
 * save the certs from inside AIA extension to disk
 * maybe have an option to save certs to keystore/truststore

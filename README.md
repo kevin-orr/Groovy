@@ -4,7 +4,7 @@
 [Join Tables in Grails](#JoinTable)  
 [SSL and HTTPS](#HTTPS)  
 [Vert-2](#Vertx)
-[DZone article on Java 8 Streams](#DZone)
+[DZone article on Java 8 Streams](#DZone.article.on.Java.8.Streams)
 
 
 
@@ -46,7 +46,7 @@ So using this "_technique_" I was able to make the blocking call to another serv
 registered on the event bus. There's got to be better ways of doing this and I think [Vertx3](http://vertx.io) has a way
 around this.
 
-<a name="DZone article on Java 8 Streams"/>
+<a name="DZone.article.on.Java.8.Streams"/>
 ### DZone article on Java 8 Streams
 
 After reading a good DZone article on how to use Java 8 Streams, I wanted to see if I could [translate into Groovy.](Java.8.streams.DZone.article)

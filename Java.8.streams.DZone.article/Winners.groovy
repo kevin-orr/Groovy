@@ -14,7 +14,9 @@ import java.time.Duration
  * @author kevinorr
  */
 public class Winner {
-
+    /**
+    notice no ctor and members not marked as private - http://www.groovy-lang.org/differences.html#_package_scope_visibility
+    */
     int year
     String nationality
     String name
@@ -24,6 +26,8 @@ public class Winner {
     int stageWins
     int daysInYellow
 
+    // no need for public modifer - public is the default access modifier for methods if not specified
+    // also using Groovy list []
     static final List<Winner> tdfWinners = [
             new Winner(year:2006, nationality:'Spain', name:'Óscar Pereiro', team:"Caisse d'Epargne–Illes Balears", lengthKm:3657, winningTime:Duration.parse('PT89H40M27S'), daysInYellow:8),
             new Winner(year:2007, nationality:'Spain', name:'Alberto Contador', team:'Discovery Channel', lengthKm:3570, winningTime:Duration.parse('PT91H00M26S'), daysInYellow:4),
@@ -39,26 +43,28 @@ public class Winner {
     ]
 
     static void main(String...args) {
-
+        
         def finalString = 'final string'
         def effectivelyFinalString = 'effectively final string'
-
+        // ToDo - fix this up
 //        Runnable r = () -> {
 //            System.out.println("Hi im " + finalString)
 //            System.out.println("Hi im " + effectivelyFinalString)
 //        }
 //        new Thread(r).start()
 
+        // now 'translate' to Groovy
         // Filter and Map -
         def winnersOfToursLessThan3500km = tdfWinners
                 .grep { it.lengthKm < 3500 }
                 .collect { it.name }
         // Winners of Tours Less than 3500km - [Alberto Contador, Cadel Evans, Bradley Wiggins, Chris Froome, Chris Froome]
         println("Winners of Tours Less than 3500km - $winnersOfToursLessThan3500km")
-
+        // using Groovy's String interpolation here --^^^^^^^^^^^^^^^^^^^^^^^^^^
+        
         def winnersOfToursGreaterThan3500km = tdfWinners
                 .grep { it.lengthKm >= 3500 }
-                .collect {it.name}
+                .collect { it.name }
         // Winners of Tours Greater than 3500km - [Óscar Pereiro, Alberto Contador, Carlos Sastre, Andy Schleck, Vincenzo Nibali, Chris Froome]
         println("Winners of Tours Greater than 3500km - $winnersOfToursGreaterThan3500km")
 
@@ -85,6 +91,7 @@ public class Winner {
         long numberOfDistinceWinners = tdfWinners.unique{ it.name }.size()
         // numberOfDistinceWinners - 8
         println("numberOfDistinceWinners - $numberOfDistinceWinners")
+        // ToDo
 //        // skip records
 //        List<Winner> skipEveryOtherTDFWinner = tdfWinners
 //                .stream()

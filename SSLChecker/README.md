@@ -1,4 +1,4 @@
-# SSL Checker
+# SSL Checker (a work in progress...)
 
 Chatting [HTTPS](SSLChecker) to a server can certainly throw up many issues and I'm not even talking about
 mutual authentication (2 way SSL or MSSL), where you, as the client talking to the server, have to authenticate
@@ -22,16 +22,17 @@ That said, the tool does a few things in the following order:
 * if the ocsp flag was set then it will attempt to see if the certs in chain are valida against the OCSP service in cert
 
 
-The first thing to note is that if the SSL handshake succeeds then we know we've got a valid cert chain and so we can
-trust the server's certificate.
+The first thing to note is that if the SSL handshake succeeds then we know we've got a valid cert chain (it's been built from the server cert up to a trust anchor and then that chain has been validated from the trust anchor back down to the server's cert, and the host name verification has passed) and so we can trust the server's certificate.
 
 However, not every server sends down the full cert chain. In this scenario, the SSL handshake will most likely fail.
 The tool will still try and do a PKIX validation - but it will most likely fail. However, even though the server may not have
 sent down all the certs in a trusted chain, we can still take a look at certificate extensions to see if they point
 us to an OCSP service which we can chat to and see if the cert is good.
 
-Once built unzip/untar the distribution and invoke either the shell script or batch file depending on your OS.
+Also, note that not every server name matches that which is contained in the certificate - host name verification check.
 
+
+Anyways, once this thing is built, unzip/untar the distribution and invoke either the shell script or batch file depending on your OS.
 Running the tool without any args should bring up the help...
 
 ```
@@ -215,6 +216,7 @@ Finished! Bye bye!
 '''
 
 # Still to do...
+* Host name verification - maybe show it in more detail blahdy blah blah
 * save the chain to disk
 * save the certs from inside AIA extension to disk
 * maybe have an option to save certs to keystore/truststore

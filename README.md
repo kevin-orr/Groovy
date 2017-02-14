@@ -4,6 +4,7 @@
 [Join Tables in Grails](#JoinTable)  
 [SSL and HTTPS](#HTTPS)  
 [Vert-2](#Vertx)
+
 [DZone article on Java 8 Streams](#DZone.article.on.Java.8.Streams)
 
 

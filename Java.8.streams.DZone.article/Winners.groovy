@@ -26,8 +26,8 @@ public class Winner {
     int stageWins
     int daysInYellow
 
-    // no need for public modifer - public is the default access modifier for methods if not specified
-    // also using Groovy list []
+    // no need for public modifier - public is the default access modifier for methods if not specified
+    // also using Groovy's list [...]
     static final List<Winner> tdfWinners = [
             new Winner(year:2006, nationality:'Spain', name:'Óscar Pereiro', team:"Caisse d'Epargne–Illes Balears", lengthKm:3657, winningTime:Duration.parse('PT89H40M27S'), daysInYellow:8),
             new Winner(year:2007, nationality:'Spain', name:'Alberto Contador', team:'Discovery Channel', lengthKm:3570, winningTime:Duration.parse('PT91H00M26S'), daysInYellow:4),
@@ -46,14 +46,15 @@ public class Winner {
         
         def finalString = 'final string'
         def effectivelyFinalString = 'effectively final string'
-        // ToDo - fix this up
-//        Runnable r = () -> {
-//            System.out.println("Hi im " + finalString)
-//            System.out.println("Hi im " + effectivelyFinalString)
-//        }
-//        new Thread(r).start()
+        def r = {
+            System.out.println("Hi im $finalString")
+            System.out.println("Hi im $effectivelyFinalString")
+            System.out.println("Bye, Bye...")
+        }
+        // so I can pass in a closure and it will behave as Runnable
+        new Thread(r).start()
 
-        // now 'translate' to Groovy
+        // now 'translate' to Groovy...
         // Filter and Map -
         def winnersOfToursLessThan3500km = tdfWinners
                 .grep { it.lengthKm < 3500 }
@@ -61,13 +62,16 @@ public class Winner {
         // Winners of Tours Less than 3500km - [Alberto Contador, Cadel Evans, Bradley Wiggins, Chris Froome, Chris Froome]
         println("Winners of Tours Less than 3500km - $winnersOfToursLessThan3500km")
         // using Groovy's String interpolation here --^^^^^^^^^^^^^^^^^^^^^^^^^^
-        
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
         def winnersOfToursGreaterThan3500km = tdfWinners
                 .grep { it.lengthKm >= 3500 }
                 .collect { it.name }
         // Winners of Tours Greater than 3500km - [Óscar Pereiro, Alberto Contador, Carlos Sastre, Andy Schleck, Vincenzo Nibali, Chris Froome]
         println("Winners of Tours Greater than 3500km - $winnersOfToursGreaterThan3500km")
 
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
         // limit -
         def winnerObjectsOfToursLessThan3500kmLimit2 = tdfWinners
                 .grep { it.lengthKm < 3500 }
@@ -77,86 +81,116 @@ public class Winner {
         // winnerObjectsOfToursLessThan3500kmLimit2 [Alberto Contador, Cadel Evans]
         println("winnerObjectsOfToursLessThan3500kmLimit2 $winnerObjectsOfToursLessThan3500kmLimit2")
 
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
         def firstTwoWinnersOfToursLessThan3500km = tdfWinners
                 .grep { it.lengthKm < 3500 }
                 .collect { it.name }
                 .take(2)
-
         // firstTwoWinnersOfToursLessThan3500km - [Alberto Contador, Cadel Evans]
         println("firstTwoWinnersOfToursLessThan3500km - $firstTwoWinnersOfToursLessThan3500km")
-        // filter by distinct
-        def distinctTDFWinners = tdfWinners.unique{ it.name }
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
+        // filter by distinct - we want a new collection returned so pass mutate=false
+        def distinctTDFWinners = tdfWinners.unique (false){ it.name }
 
         println("distinctTDFWinners - $distinctTDFWinners")
-        long numberOfDistinceWinners = tdfWinners.unique{ it.name }.size()
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
+        long numberOfDistinceWinners = tdfWinners.unique (false){ it.name }?.size()
         // numberOfDistinceWinners - 8
         println("numberOfDistinceWinners - $numberOfDistinceWinners")
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
         // ToDo
-//        // skip records
-//        List<Winner> skipEveryOtherTDFWinner = tdfWinners
-//                .stream()
-//                .skip(2)
-//                .collect(toList())
-//        // skipEveryOtherTDFWinner - [Carlos Sastre, Alberto Contador, Andy Schleck, Cadel Evans, Bradley Wiggins, Chris Froome, Vincenzo Nibali, Chris Froome, Chris Froome]
-//        System.out.println("skipEveryOtherTDFWinner - " + skipEveryOtherTDFWinner)
+        // skip records
+        def skipEveryOtherTDFWinner = (0..tdfWinners.size()).collect{ [it, it]}
+//                .grep { k, v -> v%2 == 0}
+//                .collect { k, v -> k}
+        // skipEveryOtherTDFWinner - [Carlos Sastre, Alberto Contador, Andy Schleck, Cadel Evans, Bradley Wiggins, Chris Froome, Vincenzo Nibali, Chris Froome, Chris Froome]
+        println("skipEveryOtherTDFWinner - $skipEveryOtherTDFWinner")
+
+        // I could use 'def' or the actual type - if the type is obvious I tend to leave it out
         List<String> mapWinnerYearNamesToList = tdfWinners.collect{ "${it.year} -  ${it.name}" }
         // mapWinnerYearNamesToList [2006 - Óscar Pereiro, 2007 - Alberto Contador, 2008 - Carlos Sastre, 2009 - Alberto Contador, 2010 - Andy Schleck, 2011 - Cadel Evans, 2012 - Bradley Wiggins, 2013 - Chris Froome, 2014 - Vincenzo Nibali, 2015 - Chris Froome, 2016 - Chris Froome]
         println("mapWinnerYearNamesToList $mapWinnerYearNamesToList")
 
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
 
-//        List<Integer> mapWinnerNameLengthToList = tdfWinners
-//                .stream()
-//                .map(Winner::getName)
-//                .map(String::length)
-//                .collect(toList())
-//        // mapWinnerNameLengthToList [13, 16, 13, 16, 12, 11, 15, 12, 15, 12, 12]
-//        System.out.println("mapWinnerNameLengthToList " + mapWinnerNameLengthToList)
-//        // matching - allMatch, noneMatch
-//        Optional<Winner> winner2012 = tdfWinners.stream().filter(w -> w.getName().contains("Wiggins")).findAny()
-//        // winner2012 - Bradley Wiggins
-//        System.out.println("winner2012 - " + winner2012.get())
-//        Optional<Integer> winnerYear2014 = tdfWinners.stream().map(Winner::getYear).filter(x -> x == 2014).findFirst()
-//        // winnerYear2014 - 2014
-//        System.out.println("winnerYear2014 - " + winnerYear2014.get())
-//        // reducing - 0 --> initial value
-//        int totalDistance = tdfWinners.stream().map(Winner::getLengthKm).reduce(0, Integer::sum)
-//        // totalDistance - 38767
-//        System.out.println("totalDistance - " + totalDistance)
-//        Optional<Integer> shortestYear = tdfWinners.stream().map(Winner::getLengthKm).reduce(Integer::min)
-//        // shortestYear - 3360
-//        System.out.println("shortestYear - " + shortestYear.get())
-//        Optional<Integer> longestYear = tdfWinners.stream().map(Winner::getLengthKm).reduce(Integer::max)
-//        // longestYear - 3661
-//        System.out.println("longestYear - " + longestYear.get())
-//        Optional<Winner> fastestWinner = tdfWinners.stream().min(Comparator.comparingDouble(Winner::getAveSpeed))
-//        System.out.println("fastestTDF - " + fastestWinner.get())
-//        // shorthand
-//        OptionalDouble fastestTDF = tdfWinners.stream().mapToDouble(Winner::getAveSpeed).min()
-//        // fastestTDF - 39.0
-//        System.out.println("fastestTDF - " + fastestTDF.getAsDouble())
-//        // groupingby - make a map whose keys are names
-//        Map<String, List<Winner>> namesVsWinner = tdfWinners.stream().collect(groupingBy(Winner::getName))
-//        // namesVsWinner - {Bradley Wiggins=[Bradley Wiggins], Carlos Sastre=[Carlos Sastre], Cadel Evans=[Cadel Evans], Óscar Pereiro=[Óscar Pereiro], Chris Froome=[Chris Froome, Chris Froome, Chris Froome], Andy Schleck=[Andy Schleck], Alberto Contador=[Alberto Contador, Alberto Contador], Vincenzo Nibali=[Vincenzo Nibali]}
-//        System.out.println("namesVsWinner - " + namesVsWinner)
-//        // join strings
-//        String allTDFWinnersTeamsCSV = tdfWinners.stream().map(Winner::getTeam).collect(joining(", "))
-//        // allTDFWinnersTeams Caisse d'Epargne–Illes Balears, Discovery Channel, Team CSC, Astana, Team Saxo Bank, BMC Racing Team, Team Sky, Team Sky, Astana, Team Sky, Team Sky
-//        System.out.println("allTDFWinnersTeams " + allTDFWinnersTeamsCSV)
-//        // grouping
-//        Map<String, List<Winner>> winnersByNationality = tdfWinners.stream().collect(groupingBy(Winner::getNationality))
-//        // winnersByNationality - {Great Britain=[Bradley Wiggins, Chris Froome, Chris Froome, Chris Froome], Luxembourg=[Andy Schleck], Italy=[Vincenzo Nibali], Australia=[Cadel Evans], Spain=[Óscar Pereiro, Alberto Contador, Carlos Sastre, Alberto Contador]}
-//        System.out.println("winnersByNationality - " + winnersByNationality)
-//        Map<String, Long> winsByNationalityCounting = tdfWinners.stream().collect(groupingBy(Winner::getNationality, counting()))
-//        // winsByNationalityCounting - {Great Britain=4, Luxembourg=1, Italy=1, Australia=1, Spain=4}
-//        System.out.println("winsByNationalityCounting - " + winsByNationalityCounting)
+        def mapWinnerNameLengthToList = tdfWinners.collect { it.name.length() }
+        // mapWinnerNameLengthToList [13, 16, 13, 16, 12, 11, 15, 12, 15, 12, 12]
+        println("mapWinnerNameLengthToList $mapWinnerNameLengthToList")
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
+        // matching - allMatch, noneMatch
+        Optional<Winner> winner2012 = tdfWinners.grep { it.name.contains('Wiggins')}
+        // winner2012 - Bradley Wiggins
+        println("winner2012 - ${winner2012.get()}")
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
+        def winner2012_not_using_Optional = tdfWinners.grep { it.name.contains('Wiggins')}?.first()
+        // winner2012 - Bradley Wiggins
+        println("winner2012 - ${winner2012_not_using_Optional}")
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
+        def winnerYear2014 = tdfWinners.grep {it.year == 2014}?.first()
+        // winnerYear2014 - 2014
+        println("winnerYear2014 - $winnerYear2014")
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+
+        // reducing - 0 --> initial value
+        int totalDistance = tdfWinners.sum {it.lengthKm}
+        // totalDistance - 38767
+        println("totalDistance - $totalDistance")
+
+        def shortestYear = tdfWinners.min ( { a, b -> a.lengthKm <=> b.lengthKm } as Comparator )?.lengthKm
+        // shortestYear - 3360
+        println("shortestYear - $shortestYear")
+        shortestYear = tdfWinners.collect { it.lengthKm }?.min()
+        // shortestYear - 3360
+        println("shortestYear - $shortestYear")
+
+        def longestYear = tdfWinners.collect { it.lengthKm }?.max()
+        // longestYear - 3661
+        println("longestYear - $longestYear")
+
+        def fastestWinner = tdfWinners.min { it.getAveSpeed() }
+        println("fastestTDF - $fastestWinner")
+        println("fastestTDF - ${fastestWinner.getAveSpeed()}")
+
+          // groupingby - make a map whose keys are names
+        def namesVsWinner = tdfWinners.groupBy { it.name }
+        // namesVsWinner - {Bradley Wiggins=[Bradley Wiggins], Carlos Sastre=[Carlos Sastre], Cadel Evans=[Cadel Evans], Óscar Pereiro=[Óscar Pereiro], Chris Froome=[Chris Froome, Chris Froome, Chris Froome], Andy Schleck=[Andy Schleck], Alberto Contador=[Alberto Contador, Alberto Contador], Vincenzo Nibali=[Vincenzo Nibali]}
+        println("namesVsWinner - $namesVsWinner")
+
+        // join strings
+        String allTDFWinnersTeamsCSV = tdfWinners.collect {it.team }.join(', ')
+        // allTDFWinnersTeams Caisse d'Epargne–Illes Balears, Discovery Channel, Team CSC, Astana, Team Saxo Bank, BMC Racing Team, Team Sky, Team Sky, Astana, Team Sky, Team Sky
+        println("allTDFWinnersTeams $allTDFWinnersTeamsCSV")
+        // grouping
+        Map<String, List<Winner>> winnersByNationality = tdfWinners.groupBy { it.nationality }
+        // winnersByNationality - {Great Britain=[Bradley Wiggins, Chris Froome, Chris Froome, Chris Froome], Luxembourg=[Andy Schleck], Italy=[Vincenzo Nibali], Australia=[Cadel Evans], Spain=[Óscar Pereiro, Alberto Contador, Carlos Sastre, Alberto Contador]}
+        println("winnersByNationality - $winnersByNationality")
+
+        def winsByNationalityCounting = tdfWinners.groupBy { it.nationality }.collect { k, v -> [k, v.size()] }.flatten()
+        // winsByNationalityCounting - {Great Britain=4, Luxembourg=1, Italy=1, Australia=1, Spain=4}
+        println("winsByNationalityCounting - " + winsByNationalityCounting)
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
     }
 
-    public double getAveSpeed() {
-        return (getLengthKm() / (getWinningTime().getSeconds() / 3600) )
+    double getAveSpeed() {
+        return (lengthKm / (winningTime.seconds / 3600) )
     }
 
     @Override
-    public String toString() {
+    String toString() {
         return name
     }
 }

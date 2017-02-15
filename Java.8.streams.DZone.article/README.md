@@ -7,7 +7,9 @@ plenty of examples on how to use the new stream collections.
 The great thing about Groovy though is that all these examples work right out of 
 the box - no need to change anything - it just works!
 
-So, I thought I'd re-write the examples in that article but more Groovy like.
+So, I thought I'd re-write the examples from the article but more 
+Groovy in nature (oh, here's a disclaimer - I'm relatively new to Groovy so I'm 
+sure there's plenty of better and more efficient ways of doing it in Groovy)
 
 For example, here's a snippet that finds winners of Tour that were 3500KM or less:
 ```java

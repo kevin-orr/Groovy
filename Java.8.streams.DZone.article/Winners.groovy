@@ -1,5 +1,11 @@
 import java.time.Duration
 
+import static java.util.stream.Collectors.toList;
+
+import static java.util.stream.Collectors.*;
+
+
+
 /**
  * Created by kevinorr on 14/02/17.
  */
@@ -105,14 +111,33 @@ public class Winner {
 
         assert tdfWinners.size() == 11, 'something has mutated the original collection...'
 
-        // ToDo
-        // skip records
-        def skipEveryOtherTDFWinner = (0..tdfWinners.size()).collect{ [it, it]}
-//                .grep { k, v -> v%2 == 0}
-//                .collect { k, v -> k}
-        // skipEveryOtherTDFWinner - [Carlos Sastre, Alberto Contador, Andy Schleck, Cadel Evans, Bradley Wiggins, Chris Froome, Vincenzo Nibali, Chris Froome, Chris Froome]
+        // I think there's a 'bug' in the original article - the var's name would suggest
+        // that alternative names are pulled from collection but I think that var might
+        // be incorrectly named - what the code does is actually skip the first 2 items
+        // So, this version (involved I'll admit - easier if we could zip list like in Scala/Haskell)
+        // does pull out alternative names
+        def skipEveryOtherTDFWinner = (0..tdfWinners.size())
+            .collectEntries{ [(it): tdfWinners[it]]}
+            .grep { it.key.toInteger()%2 == 0}
+            .collect { it.value}
+        // skipEveryOtherTDFWinner - [Óscar Pereiro, Carlos Sastre, Andy Schleck, Bradley Wiggins, Vincenzo Nibali, Chris Froome]
         println("skipEveryOtherTDFWinner - $skipEveryOtherTDFWinner")
+        
+        // this will skip the first 2 from collection - not actually alternate
+        skipEveryOtherTDFWinner = tdfWinners
+                .stream()
+                .skip(2)
+                .collect(toList());
+        // skipEveryOtherTDFWinner - [Carlos Sastre, Alberto Contador, Andy Schleck, Cadel Evans, Bradley Wiggins, Chris Froome, Vincenzo Nibali, Chris Froome, Chris Froome]
+        System.out.println("skipEveryOtherTDFWinner #2 - " + skipEveryOtherTDFWinner);
 
+        // here's that in Groovy
+        skipEveryOtherTDFWinner = tdfWinners.drop(2)
+        // skipEveryOtherTDFWinner - [Carlos Sastre, Alberto Contador, Andy Schleck, Cadel Evans, Bradley Wiggins, Chris Froome, Vincenzo Nibali, Chris Froome, Chris Froome]
+        System.out.println("skipEveryOtherTDFWinner #3 - " + skipEveryOtherTDFWinner);
+
+        assert tdfWinners.size() == 11, 'something has mutated the original collection...'
+        
         // I could use 'def' or the actual type - if the type is obvious I tend to leave it out
         List<String> mapWinnerYearNamesToList = tdfWinners.collect{ "${it.year} -  ${it.name}" }
         // mapWinnerYearNamesToList [2006 - Óscar Pereiro, 2007 - Alberto Contador, 2008 - Carlos Sastre, 2009 - Alberto Contador, 2010 - Andy Schleck, 2011 - Cadel Evans, 2012 - Bradley Wiggins, 2013 - Chris Froome, 2014 - Vincenzo Nibali, 2015 - Chris Froome, 2016 - Chris Froome]

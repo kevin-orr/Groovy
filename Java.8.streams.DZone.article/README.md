@@ -36,7 +36,7 @@ println("Winners of Tours Less than 3500km - $winnersOfToursLessThan3500km")
 
 I like the streams stuff in Java 8 but I have to admit I like using Groovy 
 when it comes to messing around with collections. The beauty of Groovy is
-that you can have you cake and eat it!! Happy days!!
+that you can have your cake and eat it!! Happy days!!
 
 
 Here's the output when I run it:

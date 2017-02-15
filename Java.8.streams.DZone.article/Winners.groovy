@@ -111,7 +111,7 @@ public class Winner {
 
         assert tdfWinners.size() == 11, 'something has mutated the original collection...'
 
-        // I think there's a 'bug' in the original article - the var's name would suggest
+        // I think there's a 'bug' in the original article - the var's name would suggest to me (but I'm dyslexic so what do I know) 
         // that alternative names are pulled from collection but I think that var might
         // be incorrectly named - what the code does is actually skip the first 2 items
         // So, this version (involved I'll admit - easier if we could zip list like in Scala/Haskell)
@@ -123,7 +123,7 @@ public class Winner {
         // skipEveryOtherTDFWinner - [Óscar Pereiro, Carlos Sastre, Andy Schleck, Bradley Wiggins, Vincenzo Nibali, Chris Froome]
         println("skipEveryOtherTDFWinner - $skipEveryOtherTDFWinner")
         
-        // this will skip the first 2 from collection - not actually alternate
+        // this is from the original DZone article - this will skip the first 2 from collection - not actually alternate
         skipEveryOtherTDFWinner = tdfWinners
                 .stream()
                 .skip(2)

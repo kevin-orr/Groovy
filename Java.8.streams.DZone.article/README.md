@@ -18,6 +18,9 @@ Groovy in nature (oh, here's a disclaimer - I'm relatively new to Groovy so I'm
 sure there's plenty of better and more efficient ways of doing it in Groovy).
 
 This was a nice way to learn more about streams while also learning some more about Groovy collections.
+I created 2 files:
+* Winners.groovy, which contains only Groovy approach and
+* WinnersGroovyAndJavaMixed.groovy. which contains Java streams and Groovy
 
 
 So, for example, here's a snippet from the article that finds winners of Tours that were 3500 km or less:

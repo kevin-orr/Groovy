@@ -5,14 +5,17 @@ There's a great [DZone article on Java 8 streams](https://dzone.com/articles/a-j
 a myriad of examples on just how to use the new Java 8 streams.
 
 
-The great thing about Groovy though, all these examples work right out of 
-the box - no need to change anything - it just works!
+The great thing about Groovy though, all these examples work almost right out of 
+the box (well, ok, you'll have to change lambdas to Closures) - but the point is, I suppose, if 
+you're using Java 8, the you have a choice when using Groovy - either use the new Stream (with a 
+little sprinkle of Groovy magic on top), or go ahead and use the Groovy coolections. 
+You've got both options available to you as a Groovy developer - that's a nice buffer to have 
+when trying to solve tricky problems - its all good!!
 
 
-So, I thought I'd re-write the examples from the article but more 
+Anyways, so, I thought I'd re-write the examples from the article but more 
 Groovy in nature (oh, here's a disclaimer - I'm relatively new to Groovy so I'm 
 sure there's plenty of better and more efficient ways of doing it in Groovy).
-
 
 This was a nice way to learn more about streams while also learning some more about Groovy.
 

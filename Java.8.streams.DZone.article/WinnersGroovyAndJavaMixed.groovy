@@ -154,7 +154,7 @@ class WinnersGroovyAndJavaMixed {
         System.out.println("mapWinnerYearNamesToList " + mapWinnerYearNamesToList)
 
         def mapWinnerYearNamesToList_groovy = tdfWinners
-                .collect{ "${it.year} - ${it.name}" }
+                .collect{ winner -> "${winner.year} - ${winner.name}" }
 
         println("mapWinnerYearNamesToList $mapWinnerYearNamesToList_groovy")
 
@@ -167,7 +167,7 @@ class WinnersGroovyAndJavaMixed {
         System.out.println("mapWinnerNameLengthToList " + mapWinnerNameLengthToList)
 
         def mapWinnerNameLengthToList_groovy = tdfWinners
-                .collect { it.name.length() }
+                .collect { winner -> winner.name.length() }
         // mapWinnerNameLengthToList [13, 16, 13, 16, 12, 11, 15, 12, 15, 12, 12]
         println("mapWinnerNameLengthToList $mapWinnerNameLengthToList_groovy")
 
@@ -265,7 +265,7 @@ class WinnersGroovyAndJavaMixed {
         System.out.println("namesVsWinner - " + namesVsWinner)
 
         def namesVsWinner_groovy = tdfWinners
-                .groupBy { it.name }
+                .groupBy { winner -> winner.name }
         // namesVsWinner - {Bradley Wiggins=[Bradley Wiggins], Carlos Sastre=[Carlos Sastre], Cadel Evans=[Cadel Evans], Óscar Pereiro=[Óscar Pereiro], Chris Froome=[Chris Froome, Chris Froome, Chris Froome], Andy Schleck=[Andy Schleck], Alberto Contador=[Alberto Contador, Alberto Contador], Vincenzo Nibali=[Vincenzo Nibali]}
         println("namesVsWinner - $namesVsWinner_groovy")
 

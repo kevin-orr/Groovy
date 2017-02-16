@@ -4,16 +4,21 @@
 There's a great [DZone article on Java 8 streams](https://dzone.com/articles/a-java-8-streams-cookbook?edition=268944&utm_source=Daily%20Digest&utm_medium=email&utm_campaign=dd%202017-02-14) which gives the reader 
 a myriad of examples on just how to use the new Java 8 streams.
 
+
 The great thing about Groovy though, all these examples work right out of 
 the box - no need to change anything - it just works!
+
 
 So, I thought I'd re-write the examples from the article but more 
 Groovy in nature (oh, here's a disclaimer - I'm relatively new to Groovy so I'm 
 sure there's plenty of better and more efficient ways of doing it in Groovy).
 
+
 This was a nice way to learn more about streams while also learning some more about Groovy.
 
+
 So, for example, here's a snippet from the article that finds winners of Tours that were 3500 km or less:
+
 ```java
 // Filter and Map -
 List<String> winnersOfToursLessThan3500km = tdfWinners
@@ -25,7 +30,9 @@ List<String> winnersOfToursLessThan3500km = tdfWinners
 System.out.println("Winners of Tours Less than 3500km - " + winnersOfToursLessThan3500km);
 
 ```
+
 and here's an attempt at using Groovy to achieve the same result:
+
 ```java
 // Filter and Map -
 def winnersOfToursLessThan3500km = tdfWinners
@@ -35,6 +42,7 @@ def winnersOfToursLessThan3500km = tdfWinners
 println("Winners of Tours Less than 3500km - $winnersOfToursLessThan3500km")
         
 ```
+
 
 I like the streams stuff in Java 8 but, if I'm honest, I think I prefer using Groovy 
 when it comes to messing around with collections.  

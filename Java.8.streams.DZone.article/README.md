@@ -7,8 +7,8 @@ a myriad of examples on just how to use the new Java 8 streams.
 
 The great thing about Groovy though, all these examples work almost right out of 
 the box (well, ok, you'll have to change lambdas to Closures) - but the point is, I suppose, if 
-you're using Java 8, the you have a choice when using Groovy - either use the new Stream (with a 
-little sprinkle of Groovy magic on top), or go ahead and use the Groovy coolections. 
+you're using Java 8, then you have a choice when developing in Groovy - either use the new Streams (with a 
+little sprinkle of Groovy magic on top), or go ahead and use the standard Groovy collections. 
 You've got both options available to you as a Groovy developer - that's a nice buffer to have 
 when trying to solve tricky problems - its all good!!
 
@@ -17,7 +17,7 @@ Anyways, so, I thought I'd re-write the examples from the article but more
 Groovy in nature (oh, here's a disclaimer - I'm relatively new to Groovy so I'm 
 sure there's plenty of better and more efficient ways of doing it in Groovy).
 
-This was a nice way to learn more about streams while also learning some more about Groovy.
+This was a nice way to learn more about streams while also learning some more about Groovy collections.
 
 
 So, for example, here's a snippet from the article that finds winners of Tours that were 3500 km or less:

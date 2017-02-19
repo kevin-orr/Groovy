@@ -31,7 +31,7 @@ I wanted a simple way to ping a server over [HTTPS](SSLChecker) and see if the s
 <a name="websockets"/>
 ### Chatty Websockets 
 
-I wanted to play around with websockets so this is the start of a very simple websocket app using the [Spark micro framework for Java 8.](http://sparkjava.com/)
+I wanted to play around with [websockets](chatty)  so this is the start of a very simple websocket app using the [Spark micro framework for Java 8.](http://sparkjava.com/)
 
 
 <a name="Vertx"/>

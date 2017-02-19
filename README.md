@@ -3,7 +3,9 @@
 ##### A small collection of various Groovy code snippets while learning the Groovy Language...
 [Join Tables in Grails](#JoinTable)  
 
-[SSL and HTTPS](#HTTPS)  
+[SSL and HTTPS](#HTTPS)
+
+[Chatty - playing with websockets using the Spark Java 8 micro framework](#websockets)
 
 [Vert-2](#Vertx)
 
@@ -24,6 +26,12 @@ that tricky to extend.
 ### SSL and HTTPS 
 
 I wanted a simple way to ping a server over [HTTPS](SSLChecker) and see if the server could be trusted.
+
+
+<a name="websockets"/>
+### Chatty - websockets 
+
+I wanted to play around with using websockets so this is the start of a very simple websocket app using the [Spark micro framework for Java 8.](http://sparkjava.com/)
 
 
 <a name="Vertx"/>

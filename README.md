@@ -5,7 +5,7 @@
 
 [SSL and HTTPS](#HTTPS)
 
-[Chatty - playing with websockets using the Spark Java 8 micro framework](#websockets)
+[Chatty Websockets](#websockets)
 
 [Vert-2](#Vertx)
 
@@ -29,9 +29,9 @@ I wanted a simple way to ping a server over [HTTPS](SSLChecker) and see if the s
 
 
 <a name="websockets"/>
-### Chatty - websockets 
+### Chatty Websockets 
 
-I wanted to play around with using websockets so this is the start of a very simple websocket app using the [Spark micro framework for Java 8.](http://sparkjava.com/)
+I wanted to play around with websockets so this is the start of a very simple websocket app using the [Spark micro framework for Java 8.](http://sparkjava.com/)
 
 
 <a name="Vertx"/>

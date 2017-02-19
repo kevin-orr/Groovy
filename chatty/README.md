@@ -1,6 +1,6 @@
 # Chatty
 
-Prior to this app I'd never played around with or websockets.
+Prior to this app I'd never played around with using websockets.
 The classic websocket 'hello world" example seems to be an online chat app. 
 I wanted to play around with the websockets and had noticed that [Spark](http://sparkjava.com/) 
 (which is a nice micro framework targeted for Java 8) had built-in websocket support.

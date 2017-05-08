@@ -10,6 +10,7 @@
 
 [DZone article on Java 8 Streams](#DZone.article.on.Java.8.Streams)
 
+[Using Actors To Pull WortkItems From Queue](#Queue-Work-With-Actors)
 
 
 <a name="JoinTable"/>
@@ -44,3 +45,11 @@ inside a worker verticle](using.actor.inside.vertx2.worker.verticle) some time b
 ### DZone article on Java 8 Streams
 
 After reading a good [DZone article on how to use Java 8 Streams](https://dzone.com/articles/a-java-8-streams-cookbook?edition=268944&utm_source=Daily%20Digest&utm_medium=email&utm_campaign=dd%202017-02-14), I wanted to see if I could [translate into Groovy.](Java.8.streams.DZone.article)
+
+
+<a name="Queue-Work-With-Actors"/>
+### Using Actors To Pull WortkItems From Queue
+
+I suppose this is akine to the classic publisher/subscriber paradigm - here one actor acts as a repository for stuff with the 'stuff' sent to the actor via simple messages. This actor then creates configurable number of worker actors that "process' the stuff in some configurable way.
+
+

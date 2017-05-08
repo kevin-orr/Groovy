@@ -50,6 +50,6 @@ After reading a good [DZone article on how to use Java 8 Streams](https://dzone.
 <a name="Queue-Work-With-Actors"/>
 ### Using Actors To Pull WortkItems From Queue
 
-I suppose this is akine to the classic publisher/subscriber paradigm - here one actor acts as a repository for stuff with the 'stuff' sent to the actor via simple messages. This actor then creates configurable number of worker actors that "process' the stuff in some configurable way.
+I suppose [this](using.actors.to.pull.work.items.from.queue) is akine to the classic publisher/subscriber paradigm - here one actor acts as a repository for stuff with the 'stuff' sent to the actor via simple messages. This actor then creates configurable number of worker actors that "process' the stuff in some configurable way.
 
 
